@@ -1,9 +1,7 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller.js';
-import { AppService } from './app.service.js';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { AppService } from './app.service.js'; import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigService,ConfigModule } from '@nestjs/config';
-import { TelemetryModule } from './telemetry/telemetry.module.js';
 
 
 
@@ -19,7 +17,7 @@ import { TelemetryModule } from './telemetry/telemetry.module.js';
         type:'postgres',
         host: configService.get<string>('DB_HOST'),
         port: configService.get<number>('DB_PORT'),
-        username: configService.get<string>('DB_USERNAME'),
+        username: configService.get<string>('DB_USER'),
         password: configService.get<string>('DB_PASSWORD'),
         database:   configService.get<string>('DB_NAME'),
 
@@ -29,7 +27,6 @@ import { TelemetryModule } from './telemetry/telemetry.module.js';
         synchronize:true,
       })
     })),
-    TelemetryModule
   ],
   controllers: [AppController],
   providers: [AppService],
