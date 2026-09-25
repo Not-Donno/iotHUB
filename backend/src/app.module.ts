@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js'; import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigService,ConfigModule } from '@nestjs/config';
+import { UsersModule } from './users/users.module.js';
 
 
 
@@ -22,11 +23,12 @@ import { ConfigService,ConfigModule } from '@nestjs/config';
         database:   configService.get<string>('DB_NAME'),
 
 
-        autoLoadEntries:true,
+        autoLoadEntities:true,
 
         synchronize:true,
       })
     })),
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
