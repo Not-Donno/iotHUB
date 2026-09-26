@@ -1,4 +1,4 @@
-import { ProductStatus } from '../entities/product.entity.js';
+import { ProductStatus } from '../entities/products.entity.js';
 
 export class CreateProductDto {
   vendor_id: string;
