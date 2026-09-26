@@ -6,7 +6,6 @@ import {
   IsNumber,
   IsOptional,
   IsString,
-  IsUUID,
   Length,
   Max,
   MaxLength,
@@ -15,9 +14,6 @@ import {
 import { ProductStatus } from '../entities/products.entity.js';
 
 export class CreateProductDto {
-  @IsUUID()
-  vendor_id: string;
-
   @IsString()
   @IsNotEmpty()
   @MaxLength(200)
