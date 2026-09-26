@@ -1,3 +1,4 @@
 # Agent context pack — local only, intentionally untracked.
 /AGENTS.md
 /docs/
+backend/tsconfig.build.tsbuildinfo
