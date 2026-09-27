@@ -1,4 +1,8 @@
 # Agent context pack — local only, intentionally untracked.
 /AGENTS.md
 /docs/
+# next dev re-writes frontend/AGENTS.md on every run, so untracking it keeps
+# the tree clean instead of committing whatever the local next version emits.
+/frontend/AGENTS.md
+/frontend/CLAUDE.md
 backend/tsconfig.build.tsbuildinfo
