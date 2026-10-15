@@ -22,6 +22,11 @@ export async function SiteHeader() {
         <div className="ml-auto flex items-center gap-2">
           {user ? (
             <>
+              {user.role === "vendor" ? (
+                <Button variant="ghost" size="lg" asChild>
+                  <Link href="/vendor">Dashboard</Link>
+                </Button>
+              ) : null}
               <span className="hidden text-sm text-muted-foreground sm:block">
                 {user.email}
               </span>

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { API_URL } from "@/lib/api";
+import { messageOf } from "@/lib/nest-message";
 import { SESSION_COOKIE } from "@/lib/session";
 
 type Body = {
@@ -8,18 +9,6 @@ type Body = {
   password?: unknown;
   role?: unknown;
 };
-
-// Nest errors carry `message` either as a string or as a validation array.
-function messageOf(body: unknown, fallback: string): string {
-  if (body && typeof body === "object" && "message" in body) {
-    const message = (body as { message: unknown }).message;
-    if (typeof message === "string") return message;
-    if (Array.isArray(message) && typeof message[0] === "string") {
-      return message[0];
-    }
-  }
-  return fallback;
-}
 
 export async function POST(request: Request) {
   const body = ((await request.json().catch(() => null)) ?? {}) as Body;

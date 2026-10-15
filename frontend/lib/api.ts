@@ -29,6 +29,16 @@ export async function getProduct(id: string): Promise<Product | null> {
   return res.json();
 }
 
+// Every listing the vendor owns, drafts and archived included.
+export async function getMyProducts(token: string): Promise<Product[]> {
+  const res = await fetch(`${API_URL}/products/mine`, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error(`GET /products/mine → ${res.status}`);
+  return res.json();
+}
+
 // NPR renders as "Rs 1,299" (narrowSymbol, en-US digits) — the convention on
 // Nepali webshops. minimumFractionDigits 0 keeps whole prices clean; cents
 // still show when a price has them.
