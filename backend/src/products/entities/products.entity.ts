@@ -47,7 +47,8 @@ export class Product {
   })
   price: number;
 
-  @Column({ default: 'USD' })
+  // NPR is the marketplace default; a vendor can still list in another currency
+  @Column({ default: 'NPR' })
   currency: string;
 
   @Column({ default: 0 })

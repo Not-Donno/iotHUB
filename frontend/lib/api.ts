@@ -28,7 +28,16 @@ export async function getProduct(id: string): Promise<Product | null> {
   return res.json();
 }
 
+// NPR renders as "Rs 1,299" (narrowSymbol, en-US digits) — the convention on
+// Nepali webshops. minimumFractionDigits 0 keeps whole prices clean; cents
+// still show when a price has them.
 const money = (amount: number, currency: string) =>
-  new Intl.NumberFormat("en-US", { style: "currency", currency }).format(amount);
+  new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency,
+    currencyDisplay: "narrowSymbol",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(amount);
 
 export { money };
