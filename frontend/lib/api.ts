@@ -18,6 +18,16 @@ export async function getProducts(): Promise<Product[]> {
   return res.json();
 }
 
+// null means "no such product": 404 for a real uuid that is missing or not
+// active, 400 for a malformed one (ParseUUIDPipe). Everything else throws so
+// an unreachable API does not masquerade as a missing product.
+export async function getProduct(id: string): Promise<Product | null> {
+  const res = await fetch(`${API_URL}/products/${encodeURIComponent(id)}`);
+  if (res.status === 404 || res.status === 400) return null;
+  if (!res.ok) throw new Error(`GET /products/${id} → ${res.status}`);
+  return res.json();
+}
+
 const money = (amount: number, currency: string) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency }).format(amount);
 
