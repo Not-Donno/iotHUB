@@ -1,10 +1,14 @@
+import { cookies } from "next/headers";
 import Link from "next/link";
 import { SignOutButton } from "@/components/sign-out-button";
 import { Button } from "@/components/ui/button";
+import { CART_COOKIE, cartCount, parseCart } from "@/lib/cart";
 import { getSession } from "@/lib/session";
 
 export async function SiteHeader() {
   const user = await getSession();
+  const store = await cookies();
+  const count = cartCount(parseCart(store.get(CART_COOKIE)?.value));
   return (
     <header className="sticky top-0 z-20 border-b bg-background/80 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-6xl items-center gap-6 px-6">
@@ -20,11 +24,19 @@ export async function SiteHeader() {
           </Link>
         </nav>
         <div className="ml-auto flex items-center gap-2">
+          <Button variant="ghost" size="lg" asChild>
+            <Link href="/cart">{count > 0 ? `Cart (${count})` : "Cart"}</Link>
+          </Button>
           {user ? (
             <>
               {user.role === "vendor" ? (
                 <Button variant="ghost" size="lg" asChild>
                   <Link href="/vendor">Dashboard</Link>
+                </Button>
+              ) : null}
+              {user.role === "customer" ? (
+                <Button variant="ghost" size="lg" asChild>
+                  <Link href="/orders">Orders</Link>
                 </Button>
               ) : null}
               <span className="hidden text-sm text-muted-foreground sm:block">

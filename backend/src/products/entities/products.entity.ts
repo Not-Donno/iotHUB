@@ -9,6 +9,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity.js';
+import { decimalTransformer } from '../../common/decimal.transformer.js';
 
 export enum ProductStatus {
   DRAFT = 'draft',
@@ -39,11 +40,7 @@ export class Product {
     type: 'decimal',
     precision: 10,
     scale: 2,
-    // pg returns numeric a  a string; keep price a number in JSON
-    transformer: {
-      to: (value: number) => value,
-      from: (value: string) => Number(value),
-    },
+    transformer: decimalTransformer,
   })
   price: number;
 

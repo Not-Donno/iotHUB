@@ -1,6 +1,7 @@
 import { Cpu } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { AddToCart } from "@/components/add-to-cart";
 import { Card, CardContent } from "@/components/ui/card";
 import { getProduct, money } from "@/lib/api";
 
@@ -59,6 +60,11 @@ export default async function ProductPage({
           <p className="mt-1 text-sm text-muted-foreground">
             {product.stock > 0 ? `${product.stock} in stock` : "Out of stock"}
           </p>
+          {product.stock > 0 ? (
+            <div className="mt-6">
+              <AddToCart productId={product.id} />
+            </div>
+          ) : null}
           <p className="mt-6 whitespace-pre-line text-muted-foreground">
             {product.description || "No description yet."}
           </p>

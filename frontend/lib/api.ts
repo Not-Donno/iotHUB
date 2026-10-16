@@ -1,3 +1,5 @@
+import { messageOf } from "./nest-message";
+
 export const API_URL =
   process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3100";
 
@@ -37,6 +39,57 @@ export async function getMyProducts(token: string): Promise<Product[]> {
   });
   if (!res.ok) throw new Error(`GET /products/mine → ${res.status}`);
   return res.json();
+}
+
+export type OrderLine = {
+  id: string;
+  product_name: string;
+  unit_price: number;
+  quantity: number;
+};
+
+export type Order = {
+  id: string;
+  total: number;
+  currency: string;
+  created_at: string;
+  items: OrderLine[];
+};
+
+// Every order the signed-in customer has placed, newest first.
+export async function getMyOrders(token: string): Promise<Order[]> {
+  const res = await fetch(`${API_URL}/orders/mine`, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error(`GET /orders/mine → ${res.status}`);
+  return res.json();
+}
+
+// Checkout leans on the backend for pricing, stock and currency checks; a
+// failure carries the backend's own message, shown verbatim on the cart page.
+export async function createOrder(
+  token: string,
+  items: { productId: string; quantity: number }[],
+): Promise<{ ok: true; order: Order } | { ok: false; message: string }> {
+  const res = await fetch(`${API_URL}/orders`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ items }),
+  });
+  if (!res.ok) {
+    return {
+      ok: false,
+      message: messageOf(
+        await res.json().catch(() => null),
+        "Could not place the order.",
+      ),
+    };
+  }
+  return { ok: true, order: await res.json() };
 }
 
 // NPR renders as "Rs 1,299" (narrowSymbol, en-US digits) — the convention on
