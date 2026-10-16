@@ -8,6 +8,7 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
 import { UserRole } from '../users/entities/user.entity.js';
 import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
@@ -17,6 +18,7 @@ import type { SafeUser } from '../auth/auth.service.js';
 import { ProductsService } from './products.service.js';
 import { CreateProductDto } from './dto/create-product.dto.js';
 import { UpdateProductDto } from './dto/update-product.dto.js';
+import { FindProductsQueryDto } from './dto/find-products-query.dto.js';
 
 @Controller('products')
 export class ProductsController {
@@ -24,8 +26,8 @@ export class ProductsController {
 
   @Public()
   @Get()
-  findAll() {
-    return this.productService.findAll();
+  findAll(@Query() query: FindProductsQueryDto) {
+    return this.productService.findAll(query);
   }
 
   // above @Get(':id') on purpose, or ParseUUIDPipe eats the literal "mine"

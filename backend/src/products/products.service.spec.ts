@@ -1,6 +1,7 @@
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { ILike } from 'typeorm';
 import { Product, ProductStatus } from './entities/products.entity.js';
 import { ProductsService } from './products.service.js';
 
@@ -16,6 +17,7 @@ describe('ProductsService', () => {
   let repo: {
     save: ReturnType<typeof vi.fn>;
     find: ReturnType<typeof vi.fn>;
+    findAndCount: ReturnType<typeof vi.fn>;
     findOneBy: ReturnType<typeof vi.fn>;
     remove: ReturnType<typeof vi.fn>;
   };
@@ -24,6 +26,7 @@ describe('ProductsService', () => {
     repo = {
       save: vi.fn(async (p) => p),
       find: vi.fn(async () => []),
+      findAndCount: vi.fn(async () => [[], 0]),
       findOneBy: vi.fn(async () => null),
       remove: vi.fn(async (p) => p),
     };
@@ -62,10 +65,42 @@ describe('ProductsService', () => {
   });
 
   describe('findAll', () => {
-    it('returns active products only', async () => {
+    it('defaults to page 1, 12 per page, active only, newest first', async () => {
       await service.findAll();
-      expect(repo.find).toHaveBeenCalledWith({
+      expect(repo.findAndCount).toHaveBeenCalledWith({
         where: { status: ProductStatus.ACTIVE },
+        order: { created_at: 'DESC' },
+        skip: 0,
+        take: 12,
+      });
+    });
+
+    it('searches name and description together, case-insensitively', async () => {
+      await service.findAll({ q: 'sensor' });
+      expect(repo.findAndCount).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: [
+            { status: ProductStatus.ACTIVE, name: ILike('%sensor%') },
+            { status: ProductStatus.ACTIVE, description: ILike('%sensor%') },
+          ],
+        }),
+      );
+    });
+
+    it('skips to the requested page', async () => {
+      await service.findAll({ page: 3, limit: 10 });
+      expect(repo.findAndCount).toHaveBeenCalledWith(
+        expect.objectContaining({ skip: 20, take: 10 }),
+      );
+    });
+
+    it('reports the total and the effective page/limit for the pager', async () => {
+      repo.findAndCount.mockResolvedValue([[owned()], 30]);
+      await expect(service.findAll({ page: 2, limit: 10 })).resolves.toEqual({
+        items: [owned()],
+        total: 30,
+        page: 2,
+        limit: 10,
       });
     });
   });

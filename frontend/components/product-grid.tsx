@@ -1,8 +1,19 @@
+import Link from "next/link";
 import { Cpu } from "lucide-react";
 import { ProductCard } from "@/components/product-card";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getProducts } from "@/lib/api";
+
+// keeps an active search when stepping between pages
+function pageHref(q: string, page: number) {
+  const params = new URLSearchParams();
+  if (q) params.set("q", q);
+  if (page > 1) params.set("page", String(page));
+  const qs = params.toString();
+  return `/${qs ? `?${qs}` : ""}#catalogue`;
+}
 
 function ProductGridSkeleton() {
   return (
@@ -19,10 +30,16 @@ function ProductGridSkeleton() {
   );
 }
 
-export async function ProductGrid() {
-  let products;
+export async function ProductGrid({
+  q = "",
+  page = 1,
+}: {
+  q?: string;
+  page?: number;
+}) {
+  let data;
   try {
-    products = await getProducts();
+    data = await getProducts({ q, page });
   } catch {
     return (
       <Card>
@@ -38,28 +55,81 @@ export async function ProductGrid() {
     );
   }
 
-  if (products.length === 0) {
+  const { items, total, limit } = data;
+  const pages = Math.max(1, Math.ceil(total / limit));
+  const current = Math.min(Math.max(1, page), pages);
+
+  if (items.length === 0) {
     return (
       <Card>
         <CardContent className="flex flex-col items-center gap-2 py-12 text-center">
           <Cpu className="size-6 text-muted-foreground" />
-          <p className="font-medium">No devices listed yet.</p>
-          <p className="text-muted-foreground">
-            Vendors can publish the first one from their dashboard.
-          </p>
+          {total > 0 ? (
+            <>
+              <p className="font-medium">Nothing on page {page}.</p>
+              <Button variant="outline" size="sm" asChild>
+                <Link href={pageHref(q, 1)}>Back to page 1</Link>
+              </Button>
+            </>
+          ) : q ? (
+            <>
+              <p className="font-medium">No devices match “{q}”.</p>
+              <Button variant="outline" size="sm" asChild>
+                <Link href="/#catalogue">Clear search</Link>
+              </Button>
+            </>
+          ) : (
+            <>
+              <p className="font-medium">No devices listed yet.</p>
+              <p className="text-muted-foreground">
+                Vendors can publish the first one from their dashboard.
+              </p>
+            </>
+          )}
         </CardContent>
       </Card>
     );
   }
 
-  // The API is meant to return `status = active` only (docs/ROADMAP.md). Until it
-  // does, a non-active product shows up here with its status badge rather than
-  // being silently hidden — fix the filter server-side, not in this component.
   return (
-    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-      {products.map((product) => (
-        <ProductCard key={product.id} product={product} />
-      ))}
+    <div className="space-y-8">
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {items.map((product) => (
+          <ProductCard key={product.id} product={product} />
+        ))}
+      </div>
+      {pages > 1 && (
+        <nav
+          aria-label="Catalogue pages"
+          className="flex items-center justify-center gap-4"
+        >
+          {current > 1 ? (
+            <Button variant="outline" size="sm" asChild>
+              <Link href={pageHref(q, current - 1)} rel="prev">
+                Previous
+              </Link>
+            </Button>
+          ) : (
+            <Button variant="outline" size="sm" disabled>
+              Previous
+            </Button>
+          )}
+          <span className="text-sm text-muted-foreground">
+            Page {current} of {pages}
+          </span>
+          {current < pages ? (
+            <Button variant="outline" size="sm" asChild>
+              <Link href={pageHref(q, current + 1)} rel="next">
+                Next
+              </Link>
+            </Button>
+          ) : (
+            <Button variant="outline" size="sm" disabled>
+              Next
+            </Button>
+          )}
+        </nav>
+      )}
     </div>
   );
 }

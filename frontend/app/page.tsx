@@ -2,13 +2,21 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { ProductGrid, ProductGridSkeleton } from "@/components/product-grid";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 
 // Without this the build prerenders `/` and bakes the catalogue in — a
 // production build would ship whatever the API said at build time, forever.
 export const dynamic = "force-dynamic";
 
-export default function Home() {
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string; page?: string }>;
+}) {
+  const params = await searchParams;
+  const q = typeof params.q === "string" ? params.q.trim() : "";
+  const page = Math.max(1, Math.floor(Number(params.page)) || 1);
   return (
     <main className="flex-1">
       <section className="mx-auto max-w-6xl px-6 py-20">
@@ -35,14 +43,36 @@ export default function Home() {
       <Separator />
 
       <section id="catalogue" className="mx-auto max-w-6xl px-6 py-16">
-        <div className="mb-8 flex items-baseline justify-between">
+        <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
           <h2 className="font-heading text-2xl font-semibold tracking-tight">
             Featured devices
           </h2>
-          <span className="text-sm text-muted-foreground">Live from the API</span>
+          {/* a plain GET form: search works with no client JS, and ?q= is shareable */}
+          <form
+            action="/#catalogue"
+            method="get"
+            role="search"
+            className="flex gap-2"
+          >
+            <label className="sr-only" htmlFor="catalogue-search">
+              Search devices
+            </label>
+            <Input
+              id="catalogue-search"
+              type="search"
+              name="q"
+              defaultValue={q}
+              placeholder="Search devices…"
+              maxLength={100}
+              className="w-56"
+            />
+            <Button type="submit" variant="outline">
+              Search
+            </Button>
+          </form>
         </div>
         <Suspense fallback={<ProductGridSkeleton />}>
-          <ProductGrid />
+          <ProductGrid q={q} page={page} />
         </Suspense>
       </section>
     </main>

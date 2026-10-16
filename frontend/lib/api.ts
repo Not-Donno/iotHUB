@@ -21,9 +21,25 @@ export type Product = {
   status: ProductStatus;
 };
 
-export async function getProducts(): Promise<Product[]> {
-  const res = await fetch(`${API_URL}/products`);
-  if (!res.ok) throw new Error(`GET /products → ${res.status}`);
+export type ProductPage = {
+  items: Product[];
+  total: number;
+  page: number;
+  limit: number;
+};
+
+// One page of the public catalogue. `q` is free-text over name/description;
+// page 1 and an empty search drop their params so the home URL stays clean.
+export async function getProducts(
+  params: { q?: string; page?: number } = {},
+): Promise<ProductPage> {
+  const query = new URLSearchParams();
+  if (params.q) query.set("q", params.q);
+  if (params.page && params.page > 1) query.set("page", String(params.page));
+  const qs = query.toString();
+  const path = `/products${qs ? `?${qs}` : ""}`;
+  const res = await fetch(`${API_URL}${path}`);
+  if (!res.ok) throw new Error(`GET ${path} → ${res.status}`);
   return res.json();
 }
 

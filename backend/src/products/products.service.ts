@@ -4,10 +4,11 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { FindOptionsWhere, ILike, Repository } from 'typeorm';
 import { Product, ProductStatus } from './entities/products.entity.js';
 import { CreateProductDto } from './dto/create-product.dto.js';
 import { UpdateProductDto } from './dto/update-product.dto.js';
+import { FindProductsQueryDto } from './dto/find-products-query.dto.js';
 
 @Injectable()
 export class ProductsService {
@@ -22,9 +23,31 @@ export class ProductsService {
     return this.products.save({ ...dto, vendor: { id: vendorId } });
   }
 
-  /** the public catalogue: active only */
-  findAll() {
-    return this.products.find({ where: { status: ProductStatus.ACTIVE } });
+  /** the public catalogue: active only, optional search + pagination */
+  async findAll(query: FindProductsQueryDto = {}) {
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 12;
+    // ponytail: % and _ in q act as ILIKE wildcards; escape them if search
+    // ever needs to match those literally
+    const where: FindOptionsWhere<Product> | FindOptionsWhere<Product>[] =
+      query.q
+        ? [
+            { status: ProductStatus.ACTIVE, name: ILike(`%${query.q}%`) },
+            {
+              status: ProductStatus.ACTIVE,
+              description: ILike(`%${query.q}%`),
+            },
+          ]
+        : { status: ProductStatus.ACTIVE };
+
+    // explicit order: without one, paginated pages can repeat or skip rows
+    const [items, total] = await this.products.findAndCount({
+      where,
+      order: { created_at: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+    return { items, total, page, limit };
   }
 
   /** every status, scoped to the caller */

@@ -6,9 +6,15 @@ import { getProducts, SITE_URL, type Product } from "@/lib/api";
 export const dynamic = "force-dynamic";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  let products: Product[] = [];
+  const products: Product[] = [];
   try {
-    products = await getProducts();
+    // walk the pages: there is no unbounded endpoint, and one request would
+    // silently cap the sitemap at the API's page size
+    for (let page = 1; ; page += 1) {
+      const { items, total } = await getProducts({ page });
+      products.push(...items);
+      if (items.length === 0 || products.length >= total) break;
+    }
   } catch {
     // API down: still hand the crawler the home page rather than a 500.
   }
