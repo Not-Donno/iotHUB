@@ -29,7 +29,13 @@ export async function generateMetadata({
     title: product.name,
     description,
     alternates: { canonical: url },
-    openGraph: { title: product.name, description, url, type: "website" },
+    openGraph: {
+      title: product.name,
+      description,
+      url,
+      type: "website",
+      ...(product.image_url ? { images: [product.image_url] } : {}),
+    },
   };
 }
 
@@ -69,6 +75,7 @@ export default async function ProductPage({
     "@type": "Product",
     name: product.name,
     ...(product.description ? { description: product.description } : {}),
+    ...(product.image_url ? { image: product.image_url } : {}),
     offers: {
       "@type": "Offer",
       url: `${SITE_URL}/products/${product.id}`,
@@ -95,8 +102,17 @@ export default async function ProductPage({
       </Link>
 
       <div className="mt-8 grid gap-10 lg:grid-cols-2">
-        <div className="flex aspect-[4/3] items-center justify-center rounded-xl border bg-muted text-muted-foreground">
-          <Cpu className="size-16" />
+        <div className="flex aspect-[4/3] items-center justify-center overflow-hidden rounded-xl border bg-muted text-muted-foreground">
+          {product.image_url ? (
+            // eslint-disable-next-line @next/next/no-img-element -- vendor-supplied URL, arbitrary hosts can't go through next/image
+            <img
+              src={product.image_url}
+              alt={product.name}
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <Cpu className="size-16" />
+          )}
         </div>
 
         <div>

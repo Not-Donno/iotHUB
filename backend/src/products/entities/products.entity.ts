@@ -36,6 +36,11 @@ export class Product {
   @Column({ type: 'text', default: '' })
   description: string;
 
+  // a URL to the image, not an upload: nothing is fetched server-side, so a
+  // vendor-hosted (or CDN) URL is enough for the catalogue, OG tags and JSON-LD
+  @Column({ type: 'text', default: '' })
+  image_url: string;
+
   @Column({
     type: 'decimal',
     precision: 10,

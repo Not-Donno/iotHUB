@@ -15,6 +15,7 @@ function payloadFrom(formData: FormData): Record<string, unknown> {
   const payload: Record<string, unknown> = {
     name: field(formData, "name"),
     description: field(formData, "description"),
+    image_url: field(formData, "image_url"),
     price: Number(field(formData, "price")),
     stock: Number(field(formData, "stock")),
     status: field(formData, "status", "active"),

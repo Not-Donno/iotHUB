@@ -6,10 +6,12 @@ import {
   IsNumber,
   IsOptional,
   IsString,
+  IsUrl,
   Length,
   Max,
   MaxLength,
   Min,
+  ValidateIf,
 } from 'class-validator';
 import { ProductStatus } from '../entities/products.entity.js';
 
@@ -22,6 +24,16 @@ export class CreateProductDto {
   @IsOptional()
   @IsString()
   description?: string;
+
+  // empty string clears the image, so it is excluded from URL validation
+  // instead of failing it; require_tld: false so localhost dev URLs work
+  @ValidateIf(
+    (product: CreateProductDto) =>
+      product.image_url !== undefined && product.image_url !== '',
+  )
+  @IsUrl({ protocols: ['http', 'https'], require_protocol: true, require_tld: false })
+  @MaxLength(500)
+  image_url?: string;
 
   // the column is numeric(10,2): pg hands numeric back as a string, so @Type
   // coerces the body to a real number before the entity transformer sees it

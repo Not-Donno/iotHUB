@@ -24,9 +24,18 @@ export function ProductCard({ product }: { product: Product }) {
       className="block h-full rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
       <Card className="h-full transition-colors hover:border-foreground/25">
-        <div className="flex h-32 items-center justify-center bg-muted text-muted-foreground">
-          <Cpu className="size-8" />
-        </div>
+        {product.image_url ? (
+          // eslint-disable-next-line @next/next/no-img-element -- vendor-supplied URL, arbitrary hosts can't go through next/image
+          <img
+            src={product.image_url}
+            alt={product.name}
+            className="h-32 w-full object-cover"
+          />
+        ) : (
+          <div className="flex h-32 items-center justify-center bg-muted text-muted-foreground">
+            <Cpu className="size-8" />
+          </div>
+        )}
         <CardHeader>
           <CardTitle>{product.name}</CardTitle>
           <CardDescription className="line-clamp-2">

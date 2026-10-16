@@ -99,6 +99,19 @@ function ProductFields({ product }: { product?: Product }) {
           defaultValue={product?.description}
         />
       </div>
+      <div className="space-y-2">
+        <label className="text-sm font-medium" htmlFor={product ? `image-url-${product.id}` : "image-url"}>
+          Image URL
+        </label>
+        <Input
+          id={product ? `image-url-${product.id}` : "image-url"}
+          name="image_url"
+          type="url"
+          placeholder="https://example.com/device.png"
+          maxLength={500}
+          defaultValue={product?.image_url}
+        />
+      </div>
       {product ? null : (
         <div className="space-y-2">
           <label className="text-sm font-medium" htmlFor="currency">
