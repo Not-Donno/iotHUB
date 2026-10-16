@@ -7,6 +7,7 @@ import {
 } from 'typeorm';
 import { decimalTransformer } from '../../common/decimal.transformer.js';
 import { Product } from '../../products/entities/products.entity.js';
+import { User } from '../../users/entities/user.entity.js';
 import { Order } from './order.entity.js';
 
 @Entity('order_items')
@@ -23,6 +24,12 @@ export class OrderItem {
   @ManyToOne(() => Product, { onDelete: 'SET NULL', nullable: true })
   @JoinColumn({ name: 'product_id' })
   product: Product | null;
+
+  // snapshot like the name and price: a sale must stay attributable to the
+  // vendor after the product (or the vendor account) is gone
+  @ManyToOne(() => User, { onDelete: 'SET NULL', nullable: true })
+  @JoinColumn({ name: 'vendor_id' })
+  vendor: User | null;
 
   @Column()
   product_name: string;

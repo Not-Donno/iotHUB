@@ -16,6 +16,12 @@ export class OrdersController {
     return this.ordersService.findMine(user.id);
   }
 
+  @Get('sales')
+  @Roles(UserRole.VENDOR)
+  findSales(@CurrentUser() user: SafeUser) {
+    return this.ordersService.findSales(user.id);
+  }
+
   @Post()
   @Roles(UserRole.CUSTOMER)
   create(@Body() dto: CreateOrderDto, @CurrentUser() user: SafeUser) {

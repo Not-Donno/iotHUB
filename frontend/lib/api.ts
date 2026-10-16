@@ -71,6 +71,26 @@ export async function getMyOrders(token: string): Promise<Order[]> {
   return res.json();
 }
 
+// A sale is one order that contains lines of this vendor's. `subtotal` is the
+// vendor's own share, not the order total — one order can span vendors.
+export type Sale = {
+  id: string;
+  currency: string;
+  created_at: string;
+  subtotal: number;
+  items: OrderLine[];
+};
+
+// Every order containing the signed-in vendor's lines, newest first.
+export async function getMySales(token: string): Promise<Sale[]> {
+  const res = await fetch(`${API_URL}/orders/sales`, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error(`GET /orders/sales → ${res.status}`);
+  return res.json();
+}
+
 // Checkout leans on the backend for pricing, stock and currency checks; a
 // failure carries the backend's own message, shown verbatim on the cart page.
 export async function createOrder(

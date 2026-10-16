@@ -146,9 +146,14 @@ export default async function VendorPage({
 
   return (
     <main className="mx-auto w-full max-w-6xl px-6 py-12">
-      <h1 className="font-heading text-2xl font-semibold tracking-tight">
-        Your listings
-      </h1>
+      <div className="flex items-center justify-between">
+        <h1 className="font-heading text-2xl font-semibold tracking-tight">
+          Your listings
+        </h1>
+        <Button variant="outline" asChild>
+          <Link href="/vendor/sales">Sales</Link>
+        </Button>
+      </div>
       <p className="mt-1 text-sm text-muted-foreground">
         {products.length} {products.length === 1 ? "listing" : "listings"} —
         drafts, active and archived all live here.

@@ -9,10 +9,24 @@ import { CreateOrderDto } from './dto/create-order.dto.js';
 import { OrderItem } from './entities/order-item.entity.js';
 import { Order } from './entities/order.entity.js';
 
+type Sale = {
+  id: string;
+  created_at: Date;
+  currency: string;
+  items: {
+    id: string;
+    product_name: string;
+    unit_price: number;
+    quantity: number;
+  }[];
+  subtotal: number;
+};
+
 @Injectable()
 export class OrdersService {
   constructor(
     @InjectRepository(Order) private readonly orders: Repository<Order>,
+    @InjectRepository(OrderItem) private readonly items: Repository<OrderItem>,
     @InjectDataSource() private readonly dataSource: DataSource,
   ) {}
 
@@ -61,13 +75,14 @@ export class OrdersService {
         await manager.save(product);
 
         total += product.price * quantity;
-        // snapshot: the line outlives the product, its name and its price
+        // snapshot: the line outlives the product — name, price and vendor
         items.push(
           manager.create(OrderItem, {
             product,
             product_name: product.name,
             unit_price: product.price,
             quantity,
+            vendor: { id: product.vendor_id },
           }),
         );
       }
@@ -89,5 +104,43 @@ export class OrdersService {
       relations: { items: true },
       order: { created_at: 'DESC' },
     });
+  }
+
+  /** orders containing this vendor's lines, newest first; the subtotal sums
+   *  only this vendor's lines — one order can span several vendors */
+  async findSales(vendorId: string): Promise<Sale[]> {
+    const lines = await this.items.find({
+      where: { vendor: { id: vendorId } },
+      relations: { order: true },
+      order: { order: { created_at: 'DESC' } },
+    });
+
+    const sales = new Map<string, Sale>();
+    for (const line of lines) {
+      let sale = sales.get(line.order.id);
+      if (!sale) {
+        sale = {
+          id: line.order.id,
+          created_at: line.order.created_at,
+          currency: line.order.currency,
+          items: [],
+          subtotal: 0,
+        };
+        sales.set(sale.id, sale);
+      }
+      sale.items.push({
+        id: line.id,
+        product_name: line.product_name,
+        unit_price: line.unit_price,
+        quantity: line.quantity,
+      });
+      sale.subtotal += line.unit_price * line.quantity;
+    }
+
+    // decimal(10,2); kill float dust like create() does
+    return [...sales.values()].map((sale) => ({
+      ...sale,
+      subtotal: Math.round(sale.subtotal * 100) / 100,
+    }));
   }
 }
