@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { SiteHeader } from "@/components/site-header";
+import { SITE_URL } from "@/lib/api";
 import "./globals.css";
 
 // globals.css maps `--font-sans` to itself, so the variable has to be named
@@ -16,9 +17,17 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "iotHUB — IoT device marketplace",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "iotHUB — IoT device marketplace",
+    template: "%s — iotHUB",
+  },
   description:
     "Browse sensors, gateways and controllers from verified vendors.",
+  openGraph: {
+    siteName: "iotHUB",
+    type: "website",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

@@ -3,6 +3,11 @@ import { messageOf } from "./nest-message";
 export const API_URL =
   process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3100";
 
+// Public origin of the storefront: canonical URLs, Open Graph, robots and
+// sitemap all derive from this. Set NEXT_PUBLIC_SITE_URL in production.
+export const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3300";
+
 export type ProductStatus = "draft" | "active" | "archived";
 
 export type Product = {
