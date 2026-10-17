@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindOptionsWhere, ILike, Repository } from 'typeorm';
+import { FindOptionsWhere, ILike, Not, Repository } from 'typeorm';
 import { Product, ProductStatus } from './entities/products.entity.js';
 import { CreateProductDto } from './dto/create-product.dto.js';
 import { UpdateProductDto } from './dto/update-product.dto.js';
@@ -23,22 +23,23 @@ export class ProductsService {
     return this.products.save({ ...dto, vendor: { id: vendorId } });
   }
 
-  /** the public catalogue: active only, optional search + pagination */
+  /** the public catalogue: active only, optional search, category + pagination */
   async findAll(query: FindProductsQueryDto = {}) {
     const page = query.page ?? 1;
     const limit = query.limit ?? 12;
     // ponytail: % and _ in q act as ILIKE wildcards; escape them if search
     // ever needs to match those literally
+    const filters: FindOptionsWhere<Product> = {
+      status: ProductStatus.ACTIVE,
+      ...(query.category ? { category: query.category } : {}),
+    };
     const where: FindOptionsWhere<Product> | FindOptionsWhere<Product>[] =
       query.q
         ? [
-            { status: ProductStatus.ACTIVE, name: ILike(`%${query.q}%`) },
-            {
-              status: ProductStatus.ACTIVE,
-              description: ILike(`%${query.q}%`),
-            },
+            { ...filters, name: ILike(`%${query.q}%`) },
+            { ...filters, description: ILike(`%${query.q}%`) },
           ]
-        : { status: ProductStatus.ACTIVE };
+        : filters;
 
     // explicit order: without one, paginated pages can repeat or skip rows
     const [items, total] = await this.products.findAndCount({
@@ -48,6 +49,18 @@ export class ProductsService {
       take: limit,
     });
     return { items, total, page, limit };
+  }
+
+  /** distinct categories of active products, for the filter menu */
+  async listCategories() {
+    // ponytail: one short string per active product, deduped in JS; a
+    // SELECT DISTINCT query only becomes worth it at catalogue scale
+    const rows = await this.products.find({
+      where: { status: ProductStatus.ACTIVE, category: Not('') },
+      select: { category: true },
+      order: { category: 'ASC' },
+    });
+    return [...new Set(rows.map((row) => row.category))];
   }
 
   /** every status, scoped to the caller */

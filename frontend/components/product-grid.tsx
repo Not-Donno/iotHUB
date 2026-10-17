@@ -6,10 +6,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getProducts } from "@/lib/api";
 
-// keeps an active search when stepping between pages
-function pageHref(q: string, page: number) {
+// keeps active search/category filters when stepping between pages
+function pageHref(q: string, page: number, category: string) {
   const params = new URLSearchParams();
   if (q) params.set("q", q);
+  if (category) params.set("category", category);
   if (page > 1) params.set("page", String(page));
   const qs = params.toString();
   return `/${qs ? `?${qs}` : ""}#catalogue`;
@@ -33,13 +34,15 @@ function ProductGridSkeleton() {
 export async function ProductGrid({
   q = "",
   page = 1,
+  category = "",
 }: {
   q?: string;
   page?: number;
+  category?: string;
 }) {
   let data;
   try {
-    data = await getProducts({ q, page });
+    data = await getProducts({ q, page, category });
   } catch {
     return (
       <Card>
@@ -68,14 +71,18 @@ export async function ProductGrid({
             <>
               <p className="font-medium">Nothing on page {page}.</p>
               <Button variant="outline" size="sm" asChild>
-                <Link href={pageHref(q, 1)}>Back to page 1</Link>
+                <Link href={pageHref(q, 1, category)}>Back to page 1</Link>
               </Button>
             </>
-          ) : q ? (
+          ) : q || category ? (
             <>
-              <p className="font-medium">No devices match “{q}”.</p>
+              <p className="font-medium">
+                {q
+                  ? `No devices match “${q}”${category ? ` in ${category}` : ""}.`
+                  : `No devices in “${category}”.`}
+              </p>
               <Button variant="outline" size="sm" asChild>
-                <Link href="/#catalogue">Clear search</Link>
+                <Link href="/#catalogue">Clear filters</Link>
               </Button>
             </>
           ) : (
@@ -105,7 +112,7 @@ export async function ProductGrid({
         >
           {current > 1 ? (
             <Button variant="outline" size="sm" asChild>
-              <Link href={pageHref(q, current - 1)} rel="prev">
+              <Link href={pageHref(q, current - 1, category)} rel="prev">
                 Previous
               </Link>
             </Button>
@@ -119,7 +126,7 @@ export async function ProductGrid({
           </span>
           {current < pages ? (
             <Button variant="outline" size="sm" asChild>
-              <Link href={pageHref(q, current + 1)} rel="next">
+              <Link href={pageHref(q, current + 1, category)} rel="next">
                 Next
               </Link>
             </Button>

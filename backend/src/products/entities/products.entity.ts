@@ -36,6 +36,11 @@ export class Product {
   @Column({ type: 'text', default: '' })
   description: string;
 
+  // free-text grouping for the catalogue filter, folded to lowercase on write
+  // so "Sensors" and "sensors" are one category. '' means uncategorised.
+  @Column({ type: 'text', default: '' })
+  category: string;
+
   // a URL to the image, not an upload: nothing is fetched server-side, so a
   // vendor-hosted (or CDN) URL is enough for the catalogue, OG tags and JSON-LD
   @Column({ type: 'text', default: '' })

@@ -30,7 +30,13 @@ export class ProductsController {
     return this.productService.findAll(query);
   }
 
-  // above @Get(':id') on purpose, or ParseUUIDPipe eats the literal "mine"
+  // above @Get(':id') on purpose, or ParseUUIDPipe eats the literal route
+  @Public()
+  @Get('categories')
+  listCategories() {
+    return this.productService.listCategories();
+  }
+
   @Get('mine')
   @Roles(UserRole.VENDOR)
   findMine(@CurrentUser() user: SafeUser) {

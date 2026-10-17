@@ -1,7 +1,7 @@
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { ILike } from 'typeorm';
+import { ILike, Not } from 'typeorm';
 import { Product, ProductStatus } from './entities/products.entity.js';
 import { ProductsService } from './products.service.js';
 
@@ -87,6 +87,35 @@ describe('ProductsService', () => {
       );
     });
 
+    it('filters by category', async () => {
+      await service.findAll({ category: 'sensors' });
+      expect(repo.findAndCount).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { status: ProductStatus.ACTIVE, category: 'sensors' },
+        }),
+      );
+    });
+
+    it('applies the category to both search branches', async () => {
+      await service.findAll({ q: 'lcd', category: 'displays' });
+      expect(repo.findAndCount).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: [
+            {
+              status: ProductStatus.ACTIVE,
+              category: 'displays',
+              name: ILike('%lcd%'),
+            },
+            {
+              status: ProductStatus.ACTIVE,
+              category: 'displays',
+              description: ILike('%lcd%'),
+            },
+          ],
+        }),
+      );
+    });
+
     it('skips to the requested page', async () => {
       await service.findAll({ page: 3, limit: 10 });
       expect(repo.findAndCount).toHaveBeenCalledWith(
@@ -101,6 +130,25 @@ describe('ProductsService', () => {
         total: 30,
         page: 2,
         limit: 10,
+      });
+    });
+  });
+
+  describe('listCategories', () => {
+    it('reads non-empty categories of active products and dedupes them', async () => {
+      repo.find.mockResolvedValue([
+        { category: 'boards' },
+        { category: 'boards' },
+        { category: 'sensors' },
+      ]);
+      await expect(service.listCategories()).resolves.toEqual([
+        'boards',
+        'sensors',
+      ]);
+      expect(repo.find).toHaveBeenCalledWith({
+        where: { status: ProductStatus.ACTIVE, category: Not('') },
+        select: { category: true },
+        order: { category: 'ASC' },
       });
     });
   });

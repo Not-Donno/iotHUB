@@ -4,6 +4,7 @@ import { ProductGrid, ProductGridSkeleton } from "@/components/product-grid";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { getCategories } from "@/lib/api";
 
 // Without this the build prerenders `/` and bakes the catalogue in — a
 // production build would ship whatever the API said at build time, forever.
@@ -12,11 +13,26 @@ export const dynamic = "force-dynamic";
 export default async function Home({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; page?: string }>;
+  searchParams: Promise<{ q?: string; page?: string; category?: string }>;
 }) {
   const params = await searchParams;
   const q = typeof params.q === "string" ? params.q.trim() : "";
+  // folded like the backend folds it, so the select can match an option
+  const category =
+    typeof params.category === "string"
+      ? params.category.trim().toLowerCase()
+      : "";
   const page = Math.max(1, Math.floor(Number(params.page)) || 1);
+
+  // an unreachable API must not take the page down; the grid shows its own
+  // error card in that case
+  const categories = await getCategories().catch((): string[] => []);
+  // a URL can name a category the dropdown doesn't list (no active stock):
+  // keep it as an option or the select silently drops the filter
+  const categoryOptions =
+    category && !categories.includes(category)
+      ? [category, ...categories]
+      : categories;
   return (
     <main className="flex-1">
       <section className="mx-auto max-w-6xl px-6 py-20">
@@ -66,13 +82,29 @@ export default async function Home({
               maxLength={100}
               className="w-56"
             />
+            <label className="sr-only" htmlFor="catalogue-category">
+              Category
+            </label>
+            <select
+              id="catalogue-category"
+              name="category"
+              defaultValue={category}
+              className="h-10 w-44 rounded-lg border border-border bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+            >
+              <option value="">All categories</option>
+              {categoryOptions.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
             <Button type="submit" variant="outline">
               Search
             </Button>
           </form>
         </div>
         <Suspense fallback={<ProductGridSkeleton />}>
-          <ProductGrid q={q} page={page} />
+          <ProductGrid q={q} page={page} category={category} />
         </Suspense>
       </section>
     </main>

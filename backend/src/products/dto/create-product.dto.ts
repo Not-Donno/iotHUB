@@ -1,4 +1,4 @@
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import {
   IsEnum,
   IsInt,
@@ -24,6 +24,16 @@ export class CreateProductDto {
   @IsOptional()
   @IsString()
   description?: string;
+
+  // free text, folded to trimmed lowercase so "Sensors" and "sensors" are one
+  // filter; '' means uncategorised, same as leaving it out
+  @IsOptional()
+  @Transform(({ value }: { value: unknown }) =>
+    typeof value === 'string' ? value.trim().toLowerCase() : value,
+  )
+  @IsString()
+  @MaxLength(50)
+  category?: string;
 
   // empty string clears the image, so it is excluded from URL validation
   // instead of failing it; require_tld: false so localhost dev URLs work

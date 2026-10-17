@@ -44,3 +44,36 @@ describe('CreateProductDto image_url', () => {
     );
   });
 });
+
+describe('CreateProductDto category', () => {
+  const errorsFor = async (category: unknown) => {
+    const dto = plainToInstance(CreateProductDto, {
+      name: 'Sensor',
+      price: 10,
+      category,
+    });
+    return (await validate(dto)).map((error) => error.property);
+  };
+
+  it('folds a category to trimmed lowercase', async () => {
+    const dto = plainToInstance(CreateProductDto, {
+      name: 'Sensor',
+      price: 10,
+      category: '  Sensors  ',
+    });
+    expect(await validate(dto)).toEqual([]);
+    expect(dto.category).toBe('sensors');
+  });
+
+  it('accepts an empty string and the field being absent', async () => {
+    expect(await errorsFor('')).toEqual([]);
+    const dto = plainToInstance(CreateProductDto, { name: 'Sensor', price: 10 });
+    expect(await validate(dto)).toEqual([]);
+    expect(dto.category).toBeUndefined();
+  });
+
+  it('rejects a category longer than 50 chars', async () => {
+    expect(await errorsFor('x'.repeat(51))).toContain('category');
+    expect(await errorsFor('x'.repeat(50))).toEqual([]);
+  });
+});

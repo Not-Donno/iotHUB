@@ -14,6 +14,7 @@ export type Product = {
   id: string;
   name: string;
   description: string;
+  category: string;
   image_url: string;
   price: number;
   currency: string;
@@ -28,18 +29,27 @@ export type ProductPage = {
   limit: number;
 };
 
-// One page of the public catalogue. `q` is free-text over name/description;
-// page 1 and an empty search drop their params so the home URL stays clean.
+// One page of the public catalogue. `q` is free-text over name/description,
+// `category` an exact match; page 1 and empty filters drop their params so the
+// home URL stays clean.
 export async function getProducts(
-  params: { q?: string; page?: number } = {},
+  params: { q?: string; page?: number; category?: string } = {},
 ): Promise<ProductPage> {
   const query = new URLSearchParams();
   if (params.q) query.set("q", params.q);
+  if (params.category) query.set("category", params.category);
   if (params.page && params.page > 1) query.set("page", String(params.page));
   const qs = query.toString();
   const path = `/products${qs ? `?${qs}` : ""}`;
   const res = await fetch(`${API_URL}${path}`);
   if (!res.ok) throw new Error(`GET ${path} → ${res.status}`);
+  return res.json();
+}
+
+// Distinct categories of active products, for the filter menu.
+export async function getCategories(): Promise<string[]> {
+  const res = await fetch(`${API_URL}/products/categories`);
+  if (!res.ok) throw new Error(`GET /products/categories → ${res.status}`);
   return res.json();
 }
 

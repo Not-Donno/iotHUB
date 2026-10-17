@@ -18,6 +18,15 @@ export class FindProductsQueryDto {
   @MaxLength(100)
   q?: string;
 
+  /** exact match, folded to lowercase the same way the write path folds it */
+  @IsOptional()
+  @Transform(({ value }: { value: unknown }) =>
+    typeof value === 'string' ? value.trim().toLowerCase() : value,
+  )
+  @IsString()
+  @MaxLength(50)
+  category?: string;
+
   @IsOptional()
   @Type(() => Number)
   @IsInt()

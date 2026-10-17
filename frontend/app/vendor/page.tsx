@@ -100,6 +100,18 @@ function ProductFields({ product }: { product?: Product }) {
         />
       </div>
       <div className="space-y-2">
+        <label className="text-sm font-medium" htmlFor={product ? `category-${product.id}` : "category"}>
+          Category
+        </label>
+        <Input
+          id={product ? `category-${product.id}` : "category"}
+          name="category"
+          placeholder="sensors"
+          maxLength={50}
+          defaultValue={product?.category}
+        />
+      </div>
+      <div className="space-y-2">
         <label className="text-sm font-medium" htmlFor={product ? `image-url-${product.id}` : "image-url"}>
           Image URL
         </label>

@@ -39,4 +39,17 @@ describe('FindProductsQueryDto', () => {
     expect(await errorsFor({ q: 'x'.repeat(101) })).toContain('q');
     expect(await errorsFor({ q: 'x'.repeat(100) })).toEqual([]);
   });
+
+  it('folds category to trimmed lowercase', async () => {
+    const dto = plainToInstance(FindProductsQueryDto, {
+      category: '  Sensors  ',
+    });
+    expect(await validate(dto)).toEqual([]);
+    expect(dto.category).toBe('sensors');
+  });
+
+  it('rejects a category longer than 50 chars', async () => {
+    expect(await errorsFor({ category: 'x'.repeat(51) })).toContain('category');
+    expect(await errorsFor({ category: 'x'.repeat(50) })).toEqual([]);
+  });
 });
